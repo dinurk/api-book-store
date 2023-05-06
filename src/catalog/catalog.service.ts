@@ -7,6 +7,7 @@ import { PageDto } from './dto/page.dto';
 import { BookInfoDto } from 'src/books/dto/book-info.dto';
 import ArgumentOutOfRangeError from 'src/errors/argument-out-of-range.error';
 import { ReviewEntity } from 'src/reviews/review.entity';
+import { BookAsCatalogItemDto } from 'src/books/dto/book-as-catalog-item.dto';
 
 @Injectable()
 export class CatalogService {
@@ -30,6 +31,7 @@ export class CatalogService {
 
         const books: BookEntity[] = await this.booksRepository
                                                 .createQueryBuilder("book_entity")
+                                                .orderBy("price")
                                                 .skip(pageNumber * BOOKS_PER_PAGE)
                                                 .take(BOOKS_PER_PAGE)
                                                 .getMany();
@@ -39,13 +41,13 @@ export class CatalogService {
         }
 
         const allBooksCount = await this.booksRepository.count();
-        let pagesCount = Math.floor(allBooksCount / BOOKS_PER_PAGE);
+        let pagesCount = Math.ceil(allBooksCount / BOOKS_PER_PAGE);
 
         pagesCount = pagesCount === 0 ? 1 : pagesCount;
 
         const page: PageDto = new PageDto();
         page.books = await Promise.all(books.map(async book => {
-            let tmp = BookInfoDto.map(book);
+            let tmp = BookAsCatalogItemDto.map(book);
             tmp.rating = await this.reviewsRepository.average("rating", { bookId: book.id });
             tmp.rating = tmp.rating === null ? 0 : Math.round(tmp.rating * 100) / 100;
             return tmp;

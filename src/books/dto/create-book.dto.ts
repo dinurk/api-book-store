@@ -1,4 +1,4 @@
-import { IsInt, IsString, Length, Max, Min } from "class-validator";
+import { IsArray, IsDecimal, IsInt, IsNumber, IsString, Length, Max, Min } from "class-validator";
 
 export class CreateBookDto {
 
@@ -12,6 +12,9 @@ export class CreateBookDto {
 
     @IsInt()
     pageCount: number;
+
+    @IsNumber()
+    price: number;
 
     @IsString()
     @Length(2, 3)
@@ -29,4 +32,7 @@ export class CreateBookDto {
     @Max(100000)
     @Min(0)
     inStock: number;
+
+    @IsArray()
+    imageByteArray: Uint8Array;
 }

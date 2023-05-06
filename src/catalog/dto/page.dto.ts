@@ -1,7 +1,7 @@
-import { BookInfoDto } from "src/books/dto/book-info.dto";
+import { BookAsCatalogItemDto } from "src/books/dto/book-as-catalog-item.dto";
 
 export class PageDto {
     pageNumber: number;
     pagesCount: number;
-    books: BookInfoDto[];
+    books: BookAsCatalogItemDto[];
 }

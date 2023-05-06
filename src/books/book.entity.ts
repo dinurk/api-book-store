@@ -14,7 +14,7 @@ export class BookEntity {
     @Column()
     pageCount: number;
 
-    @Column({ length: 3 })
+    @Column({ length: 3 }) 
     ageRestrictions: string;
 
     @Column({ unique: true, length: 14 })
@@ -25,6 +25,12 @@ export class BookEntity {
 
     @Column('int') 
     inStock: number;
+
+    @Column('decimal', { precision: 6, scale: 2 }) 
+    price: number;
+
+    @Column('varbinary', {length:7200})
+    imageByteArray: Buffer;
 
     // @Column('int', {default: 0})
     // numberOfRatings: number;

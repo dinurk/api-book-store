@@ -26,12 +26,27 @@ export class BooksService {
         if(existingBook != null) {
             throw new DuplicateError(`книга с isbn ${createBookDto.isbn} уже существует!`);
         }
+        console.log(JSON.stringify(createBookDto));
+        let book: BookEntity = new BookEntity();
+        book.annotation = createBookDto.annotation;
+        book.ageRestrictions = createBookDto.ageRestrictions;
+        book.author = createBookDto.author;
+        book.inStock = createBookDto.inStock;
+        book.isbn = createBookDto.isbn;
+        book.name = createBookDto.name;
+        book.pageCount = createBookDto.pageCount;
+        book.price = createBookDto.price;
+        book.imageByteArray = Buffer.from(createBookDto.imageByteArray);
 
-        let book: BookEntity = Object.assign(new BookEntity(), createBookDto);
+        // console.log(JSON.stringify(book));
+       
         const savedBook = await this.booksRepository.save(book);
-
-        const bookInfo = {...savedBook} as BookInfoDto;
+        const bookInfo: BookInfoDto = BookInfoDto.map(savedBook);
+        bookInfo.rating = 0;
+        // bookInfo.rating = 0;
         return bookInfo;
+        
+        
     }
 
     async search(query: string) {
@@ -39,7 +54,12 @@ export class BooksService {
             .where("book_entity.name like :query or book_entity.author like :query", { query:`%${query}%` })
             .getMany();
 
-        const booksInfo = books.map(book => BookInfoDto.map(book));
+        const booksInfo = await Promise.all(books.map(async book => { 
+            const bookInfoDto = BookInfoDto.map(book);
+            const rating = await this.getBookRating(book.id);
+            bookInfoDto.rating = rating;
+            return bookInfoDto;
+        }));
         return booksInfo;
     }
 
@@ -65,9 +85,17 @@ export class BooksService {
         let rating: number = await this.reviewsRepository.average("rating", { bookId });
         rating = rating === null ? 0 : Math.round(rating * 100) / 100;
 
-        const bookInfo: BookInfoDto = {...book, rating};
+        const bookInfo: BookInfoDto = BookInfoDto.map(book);
+        bookInfo.rating = rating;
 
         return bookInfo;
+    }
+
+    async getBookRating(bookId: number): Promise<number> {
+        let rating: number = await this.reviewsRepository.average("rating", { bookId });
+        rating = rating === null ? 0 : Math.round(rating * 100) / 100;
+
+        return rating;
     }
 
     async getAllReviewsById(bookId: number): Promise<ReviewsInfoDto> | null {

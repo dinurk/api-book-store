@@ -8,8 +8,10 @@ export class BookInfoDto {
     ageRestrictions: string;
     isbn: string;
     annotation: string;
+    price: number;
     inStock: number;
     rating: number;
+    imageByteArray: number[];
 
     static map(book: BookEntity): BookInfoDto {
         let bookInfoDto = new BookInfoDto();
@@ -19,8 +21,10 @@ export class BookInfoDto {
         bookInfoDto.pageCount = book.pageCount;
         bookInfoDto.ageRestrictions = book.ageRestrictions;
         bookInfoDto.isbn = book.isbn;
+        bookInfoDto.price = book.price;
         bookInfoDto.annotation = book.annotation;
         bookInfoDto.inStock = book.inStock;
+        bookInfoDto.imageByteArray = book.imageByteArray.toJSON().data; 
         return bookInfoDto;
     }
 }
