@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpException, HttpStatus, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpException, HttpStatus, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { CatalogService } from './catalog.service';
 import NotFoundError from 'src/errors/not-found.error';
 import ArgumentOutOfRangeError from 'src/errors/argument-out-of-range.error';
@@ -13,9 +13,9 @@ export class CatalogController {
     ) {}
 
     @HttpCode(HttpStatus.OK)
-    @Get('search/:query') 
+    @Get('search') 
     async searchBook(
-        @Param('query')
+        @Query('query')
         query: string
     ) {
         return await this.booksService.search(query);
@@ -23,11 +23,13 @@ export class CatalogController {
 
     @Get('pages/:pageNumber') 
     async getPageByNumber( 
+        @Query('orderBy')
+        orderBy: string,
         @Param('pageNumber', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }))
         pageNumber: number
     ) {
         try {
-            return await this.catalogService.getPage(pageNumber);
+            return await this.catalogService.getPage(pageNumber, orderBy);
         } catch (error: any) {
             if(error instanceof ArgumentOutOfRangeError) {
                 throw new HttpException(error.message, HttpStatus.BAD_REQUEST);

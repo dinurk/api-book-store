@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { ReviewEntity } from 'src/reviews/review.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity()
 export class BookEntity {
@@ -32,6 +33,8 @@ export class BookEntity {
     @Column('varbinary', {length:7200})
     imageByteArray: Buffer;
 
+    @OneToMany((type) => ReviewEntity, (review) => review.book)
+    reviews: ReviewEntity[]
     // @Column('int', {default: 0})
     // numberOfRatings: number;
 

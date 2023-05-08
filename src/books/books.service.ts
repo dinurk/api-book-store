@@ -45,13 +45,11 @@ export class BooksService {
         bookInfo.rating = 0;
         // bookInfo.rating = 0;
         return bookInfo;
-        
-        
     }
 
     async search(query: string) {
         const books = await this.booksRepository.createQueryBuilder("book_entity")
-            .where("book_entity.name like :query or book_entity.author like :query", { query:`%${query}%` })
+            .where("(book_entity.name like :query or book_entity.author like :query) and book_entity.inStock > 0", { query:`%${query}%` })
             .getMany();
 
         const booksInfo = await Promise.all(books.map(async book => { 

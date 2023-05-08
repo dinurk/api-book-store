@@ -19,7 +19,7 @@ export class CatalogService {
         private reviewsRepository: Repository<ReviewEntity>
     ) {}
 
-    async getPage(pageNumber: number): Promise<PageDto> | null {
+    async getPage(pageNumber: number, orderBy: string): Promise<PageDto> | null {
         
         const BOOKS_PER_PAGE = 10;
 
@@ -29,27 +29,36 @@ export class CatalogService {
 
         pageNumber = pageNumber - 1;
 
-        const books: BookEntity[] = await this.booksRepository
-                                                .createQueryBuilder("book_entity")
-                                                .orderBy("price")
-                                                .skip(pageNumber * BOOKS_PER_PAGE)
-                                                .take(BOOKS_PER_PAGE)
-                                                .getMany();
-        
+        // const books: BookEntity[] = await this.booksRepository
+        //                                         .createQueryBuilder("book_entity")
+        //                                         .orderBy("price")
+        //                                         .skip(pageNumber * BOOKS_PER_PAGE)
+        //                                         .take(BOOKS_PER_PAGE)
+        //                                         .getMany();
+    
+
+        if(!(["price", "rating"].includes(orderBy))) {
+            orderBy = "price";
+        }
+
+        const books = await this.booksRepository
+                                                .query(`SELECT AVG(review_entity.rating) as rating, book_entity.* FROM book_entity LEFT OUTER JOIN review_entity ON book_entity.id = review_entity.bookId WHERE book_entity.inStock > 0 GROUP BY book_entity.id ORDER BY ${orderBy} LIMIT ${pageNumber * BOOKS_PER_PAGE} , ${BOOKS_PER_PAGE}`)
+
+                                            
         if(books.length === 0) {
             throw new NotFoundError(`страницы каталога с номером ${pageNumber + 1} не существует!`);
         }
 
-        const allBooksCount = await this.booksRepository.count();
-        let pagesCount = Math.ceil(allBooksCount / BOOKS_PER_PAGE);
+        const allBooksCount = await this.booksRepository.query(`SELECT COUNT (*) as count FROM book_entity WHERE book_entity.inStock > 0`);
+        let pagesCount = Math.ceil(allBooksCount[0].count / BOOKS_PER_PAGE);
 
         pagesCount = pagesCount === 0 ? 1 : pagesCount;
 
         const page: PageDto = new PageDto();
         page.books = await Promise.all(books.map(async book => {
-            let tmp = BookAsCatalogItemDto.map(book);
-            tmp.rating = await this.reviewsRepository.average("rating", { bookId: book.id });
-            tmp.rating = tmp.rating === null ? 0 : Math.round(tmp.rating * 100) / 100;
+            let tmp = BookAsCatalogItemDto.map(book as BookEntity);
+            tmp.rating = book.rating === null? "0" : book.rating;
+            tmp.imageByteArray = null;
             return tmp;
         }));
         page.pageNumber = pageNumber + 1;
